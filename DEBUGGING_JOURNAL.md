@@ -31,3 +31,20 @@ A prop-name mismatch caused the component to receive/read the wrong value.
 
 ### Fix
 I corrected the prop name so the ProductCard receives the expected product name.
+
+## Bug 3 — Network request failure
+
+### Symptom
+The network request failed while the application was running.
+
+### Tool
+Chrome DevTools — Network
+
+### What it showed
+[Write the actual Request URL and status/error you observed.]
+
+### Root cause
+The request URL contained a typo.
+
+### Fix
+I corrected the request URL.
