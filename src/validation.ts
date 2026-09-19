@@ -7,12 +7,14 @@ export interface ValidationErrors {
 
 export function validateProductForm(data: ProductFormData): ValidationErrors {
   const errors: ValidationErrors = {}
+  const name = data.name?.trim() ?? ''
+  const price = data.price?.trim() ?? ''
 
-  if (data.name.trim().length === 0) {
+  if (name.length === 0) {
     errors.name = 'Product name is required.'
   }
 
-  if (data.price.trim().length === 0) {
+  if (price.length === 0) {
     errors.price = 'Price is required.'
   } else {
     const parsed = Number(data.price)

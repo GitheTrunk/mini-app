@@ -4,9 +4,14 @@ export interface Product {
   price: number
   inStock: boolean
   onSale: boolean
+  internalCode: string
 }
 
-export interface ProductFormData {
+export type PublicProduct = Omit<Product, 'internalCode'>
+
+export interface ProductFormFields {
   name: string
   price: string
 }
+
+export type ProductFormData = Partial<ProductFormFields>

@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import type { Product, ProductFormData } from './types'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
+import type { Product, ProductFormData, PublicProduct } from './types'
 import { initialProducts } from './data'
 import { validateProductForm, type ValidationErrors } from './validation'
 import './App.css'
@@ -20,6 +20,32 @@ function App() {
 
   const [errors, setErrors] = useState<ValidationErrors>({})
 
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = event.target
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }))
+}
+  interface ProductCardProps {
+  product: PublicProduct
+}
+
+function ProductCard({ product }: ProductCardProps) {
+  return (
+    <li className="card">
+      <h2>{product.name}</h2>
+      <p className="price">${product.price.toFixed(2)}</p>
+      {product.inStock ? (
+        <span className="badge in-stock">In stock</span>
+      ) : (
+        <span className="badge sold-out">Sold out</span>
+      )}
+    </li>
+  )
+}
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -32,10 +58,11 @@ function App() {
 
     const newProduct: Product = {
       id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name: formData.name.trim(),
+      name: formData.name?.trim() ?? '',
       price: Number(formData.price),
       inStock: true,
       onSale: false,
+      internalCode: `IC-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     }
 
     setProducts((prev) => [...prev, newProduct])
@@ -54,20 +81,14 @@ function App() {
         <input
           type="checkbox"
           checked={showInStockOnly}
-          onChange={(event) => setShowInStockOnly(event.target.checked)}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => setShowInStockOnly(event.target.checked)}
         />
         In stock only
       </label>
 
       <ul className="grid">
         {visibleProducts.map((product) => (
-          <li key={product.id} className="card">
-            <h2>{product.name}</h2>
-            <p className="price">${product.price.toFixed(2)}</p>
-            {product.inStock
-              ? <span className="badge in-stock">In stock</span>
-              : <span className="badge sold-out">Sold out</span>}
-          </li>
+          <ProductCard key={product.id} product={product} />
         ))}
       </ul>
 
@@ -78,10 +99,9 @@ function App() {
           Name
           <input
             type="text"
-            value={formData.name}
-            onChange={(event) =>
-              setFormData({ ...formData, name: event.target.value })
-            }
+            name="name"
+            value={formData.name ?? ''}
+            onChange={handleInputChange}
           />
         </label>
         {errors.name && <p className="error">{errors.name}</p>}
@@ -90,10 +110,9 @@ function App() {
           Price
           <input
             type="text"
-            value={formData.price}
-            onChange={(event) =>
-              setFormData({ ...formData, price: event.target.value })
-            }
+            name="price"
+            value={formData.price ?? ''}
+            onChange={handleInputChange}
           />
         </label>
         {errors.price && <p className="error">{errors.price}</p>}
