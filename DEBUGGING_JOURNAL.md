@@ -14,3 +14,20 @@ The product state was initialized to `null`, but the rendering logic expected an
 
 ### Fix
 I restored the product state to a `Product[]` initialized with the product data.
+
+## Bug 2 — Incorrect product name prop
+
+### Symptom
+The product cards rendered their price and stock status, but the product names were missing.
+
+### Tool
+React DevTools — Components
+
+### What it showed
+[Write the actual prop names/values you see here.]
+
+### Root cause
+A prop-name mismatch caused the component to receive/read the wrong value.
+
+### Fix
+I corrected the prop name so the ProductCard receives the expected product name.
