@@ -1,5 +1,5 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
-import LiveClock from './components/LiveClock'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import NavBar from './components/NavBar'
 import NotFound from './pages/NotFound'
 import TodoApp from './pages/TodoApp'
 import UserDetail from './pages/UserDetail'
@@ -9,14 +9,7 @@ import './App.css'
 export default function App() {
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <div className="brand">React practice</div>
-        <nav aria-label="Main navigation">
-          <NavLink to="/todos">Todos</NavLink>
-          <NavLink to="/users">Users</NavLink>
-        </nav>
-        <LiveClock />
-      </header>
+      <NavBar />
       <main>
         <Routes>
           <Route path="/" element={<Navigate to="/todos" replace />} />
