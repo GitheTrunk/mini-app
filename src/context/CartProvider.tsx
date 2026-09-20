@@ -1,5 +1,6 @@
-import { useReducer, type ReactNode } from 'react'
+import { useEffect, useReducer, type ReactNode } from 'react'
 import { CartContext, cartReducer, type CartState } from './cart-context'
+import useLocalStorage from '../hooks/useLocalStorage'
 
 interface CartProviderProps {
   children: ReactNode
@@ -10,7 +11,12 @@ const initialState: CartState = {
 }
 
 export function CartProvider({ children }: CartProviderProps) {
-  const [state, dispatch] = useReducer(cartReducer, initialState)
+  const [savedState, setSavedState] = useLocalStorage<CartState>('shopping-cart', initialState)
+  const [state, dispatch] = useReducer(cartReducer, savedState)
+
+  useEffect(() => {
+    setSavedState(state)
+  }, [state, setSavedState])
 
   return (
     <CartContext.Provider value={{ state, dispatch }}>

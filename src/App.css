@@ -36,6 +36,10 @@ h1 { margin: 0 0 6px; font-size: clamp(2rem, 5vw, 2.6rem); letter-spacing: -.05e
 .skeleton { height: 66px; border-radius: 10px; background: linear-gradient(90deg, #edf3ee 25%, #f8faf8 50%, #edf3ee 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 .user-list li { border-top: 1px solid #e9f0ea; }
+.user-search { margin-bottom: 24px; }
+.user-search label { display: block; font-weight: 700; margin-bottom: 8px; }
+.user-search input { width: 100%; padding: 11px 13px; border: 1px solid #cbdad0; border-radius: 9px; }
+.user-search p { margin: 8px 0 0; color: #617369; font-size: .9rem; }
 .user-list a { display: flex; justify-content: space-between; align-items: center; gap: 16px; text-decoration: none; padding: 15px 3px; }
 .user-list a:hover { background: #f8fbf8; }
 .user-list strong, .user-list small { display: block; }
