@@ -4,6 +4,7 @@ import NotFound from './pages/NotFound'
 import TodoApp from './pages/TodoApp'
 import UserDetail from './pages/UserDetail'
 import UserDirectory from './pages/UserDirectory'
+import CartPage from './pages/CartPage'
 import './App.css'
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/todos" element={<TodoApp />} />
           <Route path="/users" element={<UserDirectory />} />
           <Route path="/users/:id" element={<UserDetail />} />
+          <Route path="/cart" element={<CartPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

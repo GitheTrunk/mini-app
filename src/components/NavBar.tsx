@@ -20,6 +20,7 @@ export default function NavBar() {
       <nav aria-label="Main navigation">
         <NavLink to="/todos">Todos</NavLink>
         <NavLink to="/users">Users</NavLink>
+        <NavLink to="/cart">Cart</NavLink>
       </nav>
 
       {user ? (
