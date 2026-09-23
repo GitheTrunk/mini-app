@@ -1,13 +1,11 @@
 import { createContext } from 'react'
-
-export interface User {
-    email: string
-}
+import type { Session, User } from '@supabase/supabase-js'
 
 export interface AuthContextType {
-    user: User | null
-    signIn: (email: string) => void
-    signOut: () => void
+  session: Session | null
+  user: User | null
+  loading: boolean
+  signOut: () => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)

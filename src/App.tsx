@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import NavBar from './components/NavBar'
+import ProtectedRoute from './components/ProtectedRoute'
+import HabitTracker from './pages/HabitTracker'
 import NotFound from './pages/NotFound'
+import Login from './pages/Login'
 import TodoApp from './pages/TodoApp'
 import UserDetail from './pages/UserDetail'
 import UserDirectory from './pages/UserDirectory'
@@ -13,8 +16,12 @@ export default function App() {
       <NavBar />
       <main>
         <Routes>
-          <Route path="/" element={<Navigate to="/todos" replace />} />
-          <Route path="/todos" element={<TodoApp />} />
+          <Route path="/" element={<Navigate to="/habits" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/habits" element={<HabitTracker />} />
+            <Route path="/todos" element={<TodoApp />} />
+          </Route>
           <Route path="/users" element={<UserDirectory />} />
           <Route path="/users/:id" element={<UserDetail />} />
           <Route path="/cart" element={<CartPage />} />
