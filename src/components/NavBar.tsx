@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import LiveClock from './LiveClock'
+import ProfileAvatar from './ProfileAvatar'
 
 export default function NavBar() {
   const { user, loading, signOut } = useAuth()
@@ -33,6 +34,7 @@ export default function NavBar() {
       <div className="auth-summary">
         {!loading && user ? (
           <>
+            <ProfileAvatar />
             <span title={user.email}>Hi, {user.email ?? 'there'}!</span>
             <button className="secondary-button" type="button" onClick={handleSignOut}>Sign out</button>
           </>

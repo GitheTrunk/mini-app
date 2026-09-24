@@ -8,18 +8,28 @@ import TodoApp from './pages/TodoApp'
 import UserDetail from './pages/UserDetail'
 import UserDirectory from './pages/UserDirectory'
 import CartPage from './pages/CartPage'
+import ErrorBoundary from './components/ErrorBoundary'
 import './App.css'
 
 export default function App() {
   return (
     <div className="app-shell">
-      <NavBar />
+      <ErrorBoundary fallback={<p>Navigation is temporarily unavailable.</p>}>
+        <NavBar />
+      </ErrorBoundary>
       <main>
         <Routes>
           <Route path="/" element={<Navigate to="/habits" replace />} />
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/habits" element={<HabitTracker />} />
+            <Route
+              path="/habits"
+              element={(
+                <ErrorBoundary fallback={<p>The habit tracker encountered an error.</p>}>
+                  <HabitTracker />
+                </ErrorBoundary>
+              )}
+            />
             <Route path="/todos" element={<TodoApp />} />
           </Route>
           <Route path="/users" element={<UserDirectory />} />
