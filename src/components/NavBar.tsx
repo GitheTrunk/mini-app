@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import LiveClock from './LiveClock'
 import ProfileAvatar from './ProfileAvatar'
+import ShareButton from './ShareButton'
 
 export default function NavBar() {
   const { user, loading, signOut } = useAuth()
@@ -43,6 +44,7 @@ export default function NavBar() {
         ) : null}
         {signOutError && <span className="header-error" role="alert">{signOutError}</span>}
       </div>
+      <ShareButton />
       <LiveClock />
     </header>
   )

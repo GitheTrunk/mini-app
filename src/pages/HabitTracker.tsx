@@ -1,60 +1,179 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import useAuth from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import type { Habit } from '../types/habit'
 
 const habitColumns = 'id, user_id, name, completed, created_at'
+const habitQueueKey = 'daily-tracker-pending-habits-v1'
+
+interface QueuedHabit {
+  id: string
+  userId: string
+  name: string
+  completed: boolean
+  createdAt: string
+}
+
+function readHabitQueue(): QueuedHabit[] {
+  try {
+    const storedValue = localStorage.getItem(habitQueueKey)
+
+    if (!storedValue) {
+      return []
+    }
+
+    const value: unknown = JSON.parse(storedValue)
+
+    if (!Array.isArray(value)) {
+      return []
+    }
+
+    return value.filter((item): item is QueuedHabit => {
+      if (!item || typeof item !== 'object') return false
+      const queued = item as Partial<QueuedHabit>
+      return typeof queued.id === 'string'
+        && typeof queued.userId === 'string'
+        && typeof queued.name === 'string'
+        && typeof queued.completed === 'boolean'
+        && typeof queued.createdAt === 'string'
+    })
+  } catch {
+    return []
+  }
+}
+
+function writeHabitQueue(queue: QueuedHabit[]) {
+  localStorage.setItem(habitQueueKey, JSON.stringify(queue))
+}
+
+function pendingHabitsForUser(userId: string): Habit[] {
+  return readHabitQueue()
+    .filter((habit) => habit.userId === userId)
+    .map((habit) => ({
+      id: habit.id,
+      user_id: habit.userId,
+      name: habit.name,
+      completed: habit.completed,
+      created_at: habit.createdAt,
+      pendingSync: true,
+    }))
+}
+
+function removeFromQueue(userId: string, id: string) {
+  writeHabitQueue(readHabitQueue().filter((habit) => habit.userId !== userId || habit.id !== id))
+}
 
 export default function HabitTracker() {
   const { user } = useAuth()
-  const [habits, setHabits] = useState<Habit[]>([])
+  const [habits, setHabits] = useState<Habit[]>(() => user ? pendingHabitsForUser(user.id) : [])
   const [name, setName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => Boolean(user && navigator.onLine))
   const [adding, setAdding] = useState(false)
   const [activeHabitId, setActiveHabitId] = useState<string | null>(null)
   const [loadError, setLoadError] = useState('')
   const [formError, setFormError] = useState('')
   const [actionError, setActionError] = useState('')
+  const syncInProgress = useRef(false)
+
+  const loadHabits = useCallback(async () => {
+    if (!user) {
+      setHabits([])
+      setLoading(false)
+      return
+    }
+
+    const pendingHabits = pendingHabitsForUser(user.id)
+
+    if (!navigator.onLine) {
+      setHabits((current) => {
+        const serverHabits = current.filter((habit) => !habit.pendingSync)
+        return [...serverHabits, ...pendingHabits]
+      })
+      setLoading(false)
+      return
+    }
+
+    setLoadError('')
+
+    const { data, error } = await supabase
+      .from('habits')
+      .select(habitColumns)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      setLoadError(error.message)
+    } else {
+      setHabits([...(data ?? []) as Habit[], ...pendingHabitsForUser(user.id)])
+    }
+
+    setLoading(false)
+  }, [user])
+
+  const syncQueuedHabits = useCallback(async () => {
+    if (!user || !navigator.onLine || syncInProgress.current) {
+      return
+    }
+
+    syncInProgress.current = true
+    setActionError('')
+
+    try {
+      const queuedHabits = readHabitQueue().filter((habit) => habit.userId === user.id)
+
+      for (const queuedHabit of queuedHabits) {
+        const { data, error } = await supabase
+          .from('habits')
+          .upsert({
+            id: queuedHabit.id,
+            user_id: queuedHabit.userId,
+            name: queuedHabit.name,
+            completed: queuedHabit.completed,
+          }, { onConflict: 'id' })
+          .select(habitColumns)
+          .single()
+
+        if (error) {
+          setActionError(`A pending habit could not sync yet: ${error.message}`)
+          break
+        }
+
+        removeFromQueue(user.id, queuedHabit.id)
+        setHabits((current) => current.map((habit) => habit.id === queuedHabit.id ? data as Habit : habit))
+      }
+
+      await loadHabits()
+    } catch (error) {
+      setActionError(error instanceof Error
+        ? `Pending habits remain saved on this device: ${error.message}`
+        : 'Pending habits remain saved on this device and will retry later.')
+    } finally {
+      syncInProgress.current = false
+    }
+  }, [loadHabits, user])
 
   useEffect(() => {
-    let ignore = false
-
-    async function loadHabits() {
-      if (!user) {
-        return
-      }
-
-      setLoading(true)
-      setLoadError('')
-
-      const { data, error } = await supabase
-        .from('habits')
-        .select(habitColumns)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-
-      if (ignore) {
-        return
-      }
-
-      if (error) {
-        setLoadError(error.message)
-        setHabits([])
-      } else {
-        setHabits((data ?? []) as Habit[])
-      }
-
-      setLoading(false)
+    if (!user) {
+      return
     }
 
-    void loadHabits()
+    const handleOnline = () => {
+      void syncQueuedHabits()
+    }
+
+    window.addEventListener('online', handleOnline)
+
+    const initialSyncTimer = navigator.onLine
+      ? window.setTimeout(() => void syncQueuedHabits(), 0)
+      : undefined
 
     return () => {
-      ignore = true
+      if (initialSyncTimer !== undefined) window.clearTimeout(initialSyncTimer)
+      window.removeEventListener('online', handleOnline)
     }
-  }, [user])
+  }, [syncQueuedHabits, user])
 
   async function handleAdd(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -73,6 +192,37 @@ export default function HabitTracker() {
     setAdding(true)
     setFormError('')
 
+    const queueHabit = () => {
+      const queuedHabit: QueuedHabit = {
+        id: crypto.randomUUID(),
+        userId: user.id,
+        name: trimmedName,
+        completed: false,
+        createdAt: new Date().toISOString(),
+      }
+
+      try {
+        writeHabitQueue([...readHabitQueue(), queuedHabit])
+        setHabits((current) => [...current, {
+          id: queuedHabit.id,
+          user_id: queuedHabit.userId,
+          name: queuedHabit.name,
+          completed: queuedHabit.completed,
+          created_at: queuedHabit.createdAt,
+          pendingSync: true,
+        }])
+        setName('')
+      } catch {
+        setFormError('Unable to save this habit on this device.')
+      }
+    }
+
+    if (!navigator.onLine) {
+      queueHabit()
+      setAdding(false)
+      return
+    }
+
     const { data, error } = await supabase
       .from('habits')
       .insert({
@@ -83,7 +233,9 @@ export default function HabitTracker() {
       .select(habitColumns)
       .single()
 
-    if (error) {
+    if (error && !navigator.onLine) {
+      queueHabit()
+    } else if (error) {
       setFormError(error.message)
     } else {
       setHabits((current) => [...current, data as Habit])
@@ -176,6 +328,16 @@ export default function HabitTracker() {
       return
     }
 
+    if (habit.pendingSync) {
+      try {
+        removeFromQueue(user.id, habit.id)
+        setHabits((current) => current.filter((item) => item.id !== habit.id))
+      } catch {
+        setActionError('Unable to remove the pending habit from this device.')
+      }
+      return
+    }
+
     setActiveHabitId(habit.id)
     setActionError('')
 
@@ -229,11 +391,10 @@ export default function HabitTracker() {
       </form>
 
       {actionError && <p className="message error" role="alert">{actionError}</p>}
+      {loadError && <p className="message error" role="alert">Unable to load server habits: {loadError}</p>}
 
-      {loading ? (
+      {loading && habits.length === 0 ? (
         <div className="message" role="status">Loading habits…</div>
-      ) : loadError ? (
-        <div className="message error" role="alert">Unable to load habits: {loadError}</div>
       ) : habits.length === 0 ? (
         <div className="empty-state">No habits yet.</div>
       ) : (
@@ -263,14 +424,16 @@ export default function HabitTracker() {
                         type="checkbox"
                         checked={habit.completed}
                         onChange={() => handleToggle(habit)}
-                        disabled={isBusy}
+                        disabled={isBusy || habit.pendingSync}
+                        aria-label={`${habit.completed ? 'Mark incomplete' : 'Mark complete'}: ${habit.name}`}
                       />
-                      <span>{habit.name}</span>
+                      <span className="habit-name">{habit.name}</span>
+                      {habit.pendingSync && <span className="pending-badge">Pending sync</span>}
                     </label>
                     <div className="habit-actions">
-                      <button type="button" onClick={() => beginEditing(habit)} disabled={isBusy}>Edit</button>
+                      <button type="button" onClick={() => beginEditing(habit)} disabled={isBusy || habit.pendingSync}>Edit</button>
                       <button className="danger-button" type="button" onClick={() => handleDelete(habit)} disabled={isBusy}>
-                        Delete
+                        {habit.pendingSync ? 'Remove' : 'Delete'}
                       </button>
                     </div>
                   </>

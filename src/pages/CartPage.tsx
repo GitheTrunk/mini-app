@@ -31,6 +31,7 @@ export default function CartPage() {
                             type="number"
                             min="0"
                             value={item.quantity}
+                            aria-label={`Quantity for ${item.name}`}
                             onChange={(e) =>
                                 dispatch({
                                     type: 'UPDATE_QUANTITY',
@@ -40,6 +41,8 @@ export default function CartPage() {
                             }
                         />
                         <button
+                            type="button"
+                            aria-label={`Remove ${item.name} from cart`}
                             onClick={() =>
                                 dispatch({ type: 'REMOVE_ITEM', id: item.id })
                             }
@@ -51,6 +54,7 @@ export default function CartPage() {
             </ul>
         )}
         <button
+            type="button"
             onClick={() =>
                 dispatch({
                     type: 'ADD_ITEM',

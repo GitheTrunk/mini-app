@@ -9,6 +9,8 @@ import UserDetail from './pages/UserDetail'
 import UserDirectory from './pages/UserDirectory'
 import CartPage from './pages/CartPage'
 import ErrorBoundary from './components/ErrorBoundary'
+import OfflineBanner from './components/OfflineBanner'
+import UpdateToast from './components/UpdateToast'
 import './App.css'
 
 export default function App() {
@@ -17,6 +19,7 @@ export default function App() {
       <ErrorBoundary fallback={<p>Navigation is temporarily unavailable.</p>}>
         <NavBar />
       </ErrorBoundary>
+      <OfflineBanner />
       <main>
         <Routes>
           <Route path="/" element={<Navigate to="/habits" replace />} />
@@ -38,6 +41,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      <UpdateToast />
     </div>
   )
 }

@@ -4,4 +4,5 @@ export interface Habit {
   name: string
   completed: boolean
   created_at: string
+  pendingSync?: boolean
 }

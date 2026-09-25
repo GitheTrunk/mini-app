@@ -76,8 +76,10 @@ export default function ProfileAvatar() {
       }
 
       if (error) {
-        setErrorMessage(`Unable to load avatar: ${error.message}`)
-        setAvatarUrl(null)
+        if (navigator.onLine) {
+          setErrorMessage(`Unable to load avatar: ${error.message}`)
+          setAvatarUrl(null)
+        }
       } else {
         setAvatarUrl(typeof data?.avatar_url === 'string' ? data.avatar_url : null)
       }
