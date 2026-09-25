@@ -211,7 +211,7 @@ export default function ProfileAvatar() {
     <section className="profile-avatar" aria-labelledby="avatar-heading">
       <div className="avatar-image" aria-busy={loading}>
         {displayedAvatarSrc ? (
-          <img src={displayedAvatarSrc} alt="Your profile avatar" />
+          <img src={displayedAvatarSrc} alt="Your profile avatar" width={38} height={38} />
         ) : (
           <span aria-label="No avatar uploaded">{user.email?.charAt(0).toUpperCase() || '?'}</span>
         )}

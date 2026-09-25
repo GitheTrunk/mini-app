@@ -1,7 +1,7 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import ProtectedRoute from './components/ProtectedRoute'
-import HabitTracker from './pages/HabitTracker'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import TodoApp from './pages/TodoApp'
@@ -12,6 +12,8 @@ import ErrorBoundary from './components/ErrorBoundary'
 import OfflineBanner from './components/OfflineBanner'
 import UpdateToast from './components/UpdateToast'
 import './App.css'
+
+const HabitTracker = lazy(() => import('./pages/HabitTracker'))
 
 export default function App() {
   return (
@@ -29,7 +31,9 @@ export default function App() {
               path="/habits"
               element={(
                 <ErrorBoundary fallback={<p>The habit tracker encountered an error.</p>}>
-                  <HabitTracker />
+                  <Suspense fallback={<p role="status">Loading habit tracker…</p>}>
+                    <HabitTracker />
+                  </Suspense>
                 </ErrorBoundary>
               )}
             />
